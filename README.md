@@ -1,16 +1,40 @@
-# React + Vite
+# 📦 InveTiendas - Sistema de Gestión de Inventarios (Vite + React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**InveTiendas** es una aplicación web de alto rendimiento construida con **Vite**, diseñada para facilitar el control de inventarios, ventas y reportes para comercios. Este proyecto forma parte del proceso de formación en el SENA.
 
-Currently, two official plugins are available:
+## 🚀 Características Actuales
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **Rendimiento optimizado:** Desarrollado sobre **Vite** para una experiencia de desarrollo y carga ultrarrápida.
+* **Dashboard Interactivo:** Visualización de estadísticas clave mediante gráficas dinámicas.
+* **Gestión de Inventario:**
+    * Tabla de productos con estados dinámicos (Bajo Stock, etc.).
+    * Buscador local integrado en tiempo real por nombre o ID.
+* **Interfaz de Usuario (UI):** Diseño profesional con Tailwind CSS utilizando la paleta de colores corporativa (#2DCDBA, #E7F4EE, #263238).
 
-## React Compiler
+## 🛠️ Tecnologías Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Bundler:** [Vite](https://vitejs.dev/)
+* **Frontend:** [React.js](https://reactjs.org/)
+* **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
+* **Lógica de Estado:** React Hooks (`useState`, `useEffect`).
 
-## Expanding the ESLint configuration
+## 📸 Vista Previa del Sistema
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+> *La interfaz cuenta con Sidebar persistente, Header de navegación y componentes de Inventory Management totalmente funcionales.*
+
+## ⚙️ Instalación y Ejecución
+
+Sigue estos pasos para levantar el entorno de desarrollo:
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/Dann-ops/invetiendas.git](https://github.com/Dann-ops/invetiendas.git)
+   
+Entrar a la carpeta:
+cd invetiendas
+
+Instalar dependencias:
+npm install
+
+Iniciar servidor de desarrollo (Vite):
+npm run dev

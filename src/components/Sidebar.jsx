@@ -1,4 +1,5 @@
-export default function Sidebar({ alCambiarVista, vistaActiva }) {
+// 1. Agregamos onLogout aquí arriba
+export default function Sidebar({ alCambiarVista, vistaActiva, onLogout }) {
   const menuItems = [
     { id: 'inicio', label: 'Inicio', icon: '/Iconos/home.png' },
     { id: 'inventario', label: 'Inventario', icon: '/Iconos/box.png' },
@@ -35,7 +36,7 @@ export default function Sidebar({ alCambiarVista, vistaActiva }) {
                 src={item.icon} 
                 className={`w-6 h-6 transition-all duration-300 ${
                   estaActivo 
-                    ? 'brightness-0 contrast-200' // Icono NEGRO puro cuando está activo
+                    ? 'brightness-0 contrast-200' 
                     : 'brightness-0 opacity-30'
                 }`} 
                 alt={item.label} 
@@ -46,9 +47,12 @@ export default function Sidebar({ alCambiarVista, vistaActiva }) {
         })}
       </nav>
 
-      {/* BOTÓN CERRAR SESIÓN CON TU NUEVO ICONO LOG-OUT */}
+      {/* BOTÓN CERRAR SESIÓN CON onClick CONECTADO */}
       <div className="p-6 border-t border-gray-50">
-        <button className="w-full flex items-center gap-4 px-6 py-3 text-[#263238]/40 font-bold hover:text-[#FF7043] group transition-all duration-300">
+        <button 
+          onClick={onLogout} // 2. Conectamos la función aquí
+          className="w-full flex items-center gap-4 px-6 py-3 text-[#263238]/40 font-bold hover:text-[#FF7043] group transition-all duration-300"
+        >
           <img 
             src="/Iconos/log-out.png" 
             className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:brightness-0 transition-all" 

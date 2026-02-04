@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
+# Importamos las herramientas de seguridad
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
@@ -15,7 +17,7 @@ db_config = {
 def get_db_connection():
     return mysql.connector.connect(**db_config)
 
-# --- USUARIOS (Login y Registro) ---
+# --- USUARIOS (Login y Registro con Seguridad) ---
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -27,6 +29,7 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
+        # Buscamos al usuario por correo
         query = "SELECT id_usuario, id_negocio, id_rol, nombre, password FROM usuario WHERE correo = %s"
         cursor.execute(query, (correo,))
         usuario = cursor.fetchone()
@@ -34,7 +37,8 @@ def login():
         cursor.close()
         conn.close()
 
-        if usuario and usuario['password'] == password_ingresada:
+        # VALIDACIÓN SEGURA: Comparamos el hash de la DB con la clave ingresada
+        if usuario and check_password_hash(usuario['password'], password_ingresada):
             return jsonify({
                 "status": "success",
                 "usuario": {
@@ -43,6 +47,7 @@ def login():
                     "id_negocio": usuario['id_negocio']
                 }
             }), 200
+        
         return jsonify({"status": "error", "mensaje": "Credenciales inválidas"}), 401
     except Exception as e:
         return jsonify({"status": "error", "mensaje": str(e)}), 500
@@ -53,19 +58,26 @@ def registrar():
         datos = request.json
         nombre = datos.get('nombre')
         correo = datos.get('correo')
-        password = datos.get('password')
+        password_plana = datos.get('password')
         nombre_tienda = datos.get('tienda', f"Tienda de {nombre}")
+
+        # GENERAR HASH: Encriptamos la contraseña antes de guardarla
+        password_encriptada = generate_password_hash(password_plana)
 
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # 1. Crear el negocio
         cursor.execute("INSERT INTO negocio (nombre) VALUES (%s)", (nombre_tienda,))
         id_nuevo_negocio = cursor.lastrowid 
 
+        # 2. Crear el usuario usando la contraseña encriptada
         query_usuario = """
             INSERT INTO usuario (id_negocio, id_rol, nombre, correo, password, estado) 
             VALUES (%s, %s, %s, %s, %s, 1)
         """
-        cursor.execute(query_usuario, (id_nuevo_negocio, 1, nombre, correo, password))
+        cursor.execute(query_usuario, (id_nuevo_negocio, 1, nombre, correo, password_encriptada))
+        
         conn.commit()
         cursor.close()
         conn.close()
@@ -73,8 +85,8 @@ def registrar():
     except Exception as e:
         return jsonify({"status": "error", "mensaje": str(e)}), 400
 
-
 # --- PRODUCTOS (CRUD) ---
+# ... (Tus rutas de productos se mantienen igual, están bien estructuradas) ...
 
 @app.route('/productos/<int:id_negocio>', methods=['GET'])
 def obtener_productos(id_negocio):
@@ -154,7 +166,6 @@ def eliminar_producto(id_producto):
     except Exception as e:
         return jsonify({"status": "error", "mensaje": str(e)}), 500
 
-
 # --- ESTADÍSTICAS Y GRÁFICOS ---
 
 @app.route('/stats/<int:id_negocio>', methods=['GET'])
@@ -162,16 +173,12 @@ def obtener_stats(id_negocio):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
         cursor.execute("SELECT COUNT(*) as total FROM producto WHERE id_negocio = %s", (id_negocio,))
         total = cursor.fetchone()['total']
-        
         cursor.execute("SELECT COUNT(*) as bajo FROM producto WHERE id_negocio = %s AND stock <= stock_minimo", (id_negocio,))
         bajo_stock = cursor.fetchone()['bajo']
-        
         cursor.close()
         conn.close()
-        
         return jsonify({
             "total_productos": total,
             "bajo_stock": bajo_stock,
@@ -195,7 +202,6 @@ def grafico_categorias(id_negocio):
         resultados = cursor.fetchall()
         cursor.close()
         conn.close()
-        
         datos = [{"name": r[0] if r[0] else "Sin Categoría", "value": r[1]} for r in resultados]
         return jsonify(datos)
     except Exception as e:
@@ -217,7 +223,6 @@ def grafico_productos(id_negocio):
         resultados = cursor.fetchall()
         cursor.close()
         conn.close()
-        
         datos = [{"p": r[0], "v": r[1]} for r in resultados]
         return jsonify(datos)
     except Exception as e:
@@ -228,7 +233,6 @@ def obtener_usuarios_negocio(id_negocio):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # Traemos los usuarios vinculados a ese negocio
         query = "SELECT id_usuario, nombre, correo, id_rol, estado FROM usuario WHERE id_negocio = %s"
         cursor.execute(query, (id_negocio,))
         usuarios = cursor.fetchall()

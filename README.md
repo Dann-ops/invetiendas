@@ -1,40 +1,64 @@
-# 📦 InveTiendas - Sistema de Gestión de Inventarios (Vite + React)
+#  InveTiendas - Sistema de Gestión de Inventarios (Full Stack)
 
-**InveTiendas** es una aplicación web de alto rendimiento construida con **Vite**, diseñada para facilitar el control de inventarios, ventas y reportes para comercios. Este proyecto forma parte del proceso de formación en el SENA.
+**InveTiendas** es una solución integral para el control de inventarios, ventas y reportes. Este proyecto ha evolucionado de un prototipo visual a una aplicación funcional con arquitectura Cliente-Servidor, desarrollada como parte del proceso de formación en el SENA.
 
-## 🚀 Características Actuales
+##  Características Actuales
 
-* **Rendimiento optimizado:** Desarrollado sobre **Vite** para una experiencia de desarrollo y carga ultrarrápida.
-* **Dashboard Interactivo:** Visualización de estadísticas clave mediante gráficas dinámicas.
-* **Gestión de Inventario:**
+* **Rendimiento optimizado:** Frontend construido sobre **Vite** para una carga ultrarrápida.
+* **Arquitectura API REST:** Backend independiente desarrollado en **Python (Flask)**.
+* **Seguridad Avanzada:** Implementación de **Hashing (Bcrypt)** para la protección de credenciales en la base de datos.
+* **Gestión de Inventario y Usuarios:** * Registro dinámico de negocios y administradores.
+    * Dashboard interactivo con estadísticas clave.
     * Tabla de productos con estados dinámicos (Bajo Stock, etc.).
-    * Buscador local integrado en tiempo real por nombre o ID.
-* **Interfaz de Usuario (UI):** Diseño profesional con Tailwind CSS utilizando la paleta de colores corporativa (#2DCDBA, #E7F4EE, #263238).
+* **UI/UX Profesional:** Diseño moderno con **Tailwind CSS** y sistema de navegación persistente.
 
-## 🛠️ Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
-* **Bundler:** [Vite](https://vitejs.dev/)
-* **Frontend:** [React.js](https://reactjs.org/)
-* **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
-* **Lógica de Estado:** React Hooks (`useState`, `useEffect`).
+### Frontend
+* **Framework:** React.js + Vite
+* **Estilos:** Tailwind CSS
+* **Iconografía:** Lucide React / Emojis dinámicos
 
-## 📸 Vista Previa del Sistema
+### Backend & Base de Datos
+* **Lenguaje:** Python 3.x
+* **Framework API:** Flask + Flask-CORS
+* **Seguridad:** Flask-Bcrypt
+* **Base de Datos:** MySQL (Relacional)
 
-> *La interfaz cuenta con Sidebar persistente, Header de navegación y componentes de Inventory Management totalmente funcionales.*
 
-## ⚙️ Instalación y Ejecución
+##  Instalación y Ejecución
 
-Sigue estos pasos para levantar el entorno de desarrollo:
+### 1. Requisitos Previos
+* Node.js instalado.
+* Python 3.x y MySQL Server.
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone [https://github.com/Dann-ops/invetiendas.git](https://github.com/Dann-ops/invetiendas.git)
-   
-Entrar a la carpeta:
-cd invetiendas
+###  Configuración del Entorno y Ejecución
+Para que el sistema funcione correctamente, se deben configurar ambos entornos (Backend y Frontend) y la base de datos.
 
-Instalar dependencias:
+1. Base de Datos (MySQL)
+Antes de iniciar los servidores, es necesario preparar el esquema de datos:
+
+Abrir MySQL Workbench.
+
+Ejecutar el script SQL incluido en la carpeta /database para crear la base de datos inventiendas y las tablas negocio y usuario.
+
+Verificar que el servicio de MySQL esté corriendo en el puerto 3306.
+
+# Navegar a la carpeta del servidor
+cd backend-invetiendas
+
+# Instalar las librerías necesarias
+pip install flask flask-cors mysql-connector-python flask-bcrypt
+
+# Iniciar el servidor
+python app.py
+
+### Ejecucion FrontEnd
+# Navegar a la carpeta del cliente
+cd frontend-invetiendas
+
+# Instalar dependencias de Node
 npm install
 
-Iniciar servidor de desarrollo (Vite):
+# Iniciar la aplicación en modo desarrollo
 npm run dev

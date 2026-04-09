@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
-# Importamos las herramientas de seguridad
+# Se importa la herramienta de seguridad
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -86,7 +86,7 @@ def registrar():
         return jsonify({"status": "error", "mensaje": str(e)}), 400
 
 # --- PRODUCTOS (CRUD) ---
-# ... (Tus rutas de productos se mantienen igual, están bien estructuradas) ...
+# ... Las rutas del producto se mantienen igual, dando asi una estructura mas limpia...
 
 @app.route('/productos/<int:id_negocio>', methods=['GET'])
 def obtener_productos(id_negocio):

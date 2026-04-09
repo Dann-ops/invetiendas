@@ -25,7 +25,7 @@ export default function AlertaStock({ usuario }) {
     };
 
     verificarStock();
-    // Se puede agregar un intervalo para que revise cada 5 minutos si quieres
+    // Se puede agregar un intervalo para que revise cada 5 minutos "SI ASI SE DESEA"
   }, [usuario]);
 
   // Si no hay productos bajos o el usuario cerró la alerta, no renderizamos nada

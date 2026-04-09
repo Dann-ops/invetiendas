@@ -76,6 +76,7 @@ function App() {
           )}
         </main>
       </div>
+      <AlertaStock usuario={usuario} />
     </div>
   );
 }

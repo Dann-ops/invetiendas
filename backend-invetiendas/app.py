@@ -241,6 +241,12 @@ def obtener_usuarios_negocio(id_negocio):
         return jsonify(usuarios), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/test-api', methods=['GET'])
+def test_api():
+    return {"status": "Conexion exitosa", "proyecto": "Invetiendas API"}, 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

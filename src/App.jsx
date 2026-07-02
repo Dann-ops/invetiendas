@@ -1,4 +1,4 @@
-import { useState,} from 'react';
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
@@ -8,6 +8,7 @@ import Inventario from './components/Inventario';
 import Login from './components/Login';
 import Registro from './components/Registro';
 import Configuracion from './components/Configuracion'; 
+import Ventas from './components/Ventas';
 
 function App() {
   const [usuario, setUsuario] = useState(() => {
@@ -70,7 +71,12 @@ function App() {
             <Inventario filtro={terminoBusqueda} usuario={usuario} />
           )}
 
-          {/* VISTA CONFIGURACIÓN - PASANDO PROP DE USUARIO */}
+          {/* VISTA VENTAS (CORREGIDO: SE AGREGÓ ESTE BLOQUE) */}
+          {vistaActual === 'ventas' && (
+            <Ventas usuario={usuario} />
+          )}
+
+          {/* VISTA CONFIGURACIÓN */}
           {vistaActual === 'configuracion' && (
             <Configuracion usuario={usuario} />
           )}

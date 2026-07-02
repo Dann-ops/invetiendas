@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import ModalProducto from './ModalProducto';
+import ScannerCamara from './ScannerCamara'; // <-- Importación 
 
 export default function Inventario({ usuario }) {
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -7,6 +8,9 @@ export default function Inventario({ usuario }) {
   const [busquedaInterna, setBusquedaInterna] = useState('');
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
+
+  // NUEVO ESTADO: Controla de manera aislada la apertura de la cámara
+  const [camaraAbierta, setCamaraAbierta] = useState(false);
 
   const cargarProductos = useCallback(async () => {
     if (!usuario?.id_negocio) return;
@@ -45,7 +49,12 @@ export default function Inventario({ usuario }) {
 
   const productosFiltrados = productos.filter(p => {
     const termino = busquedaInterna.toLowerCase();
-    return p.nombre?.toLowerCase().includes(termino) || p.id_producto?.toString().includes(termino);
+    // Añadida validación también por código de barra en el filtro por si deseas buscar digitándolo directo
+    return (
+      p.nombre?.toLowerCase().includes(termino) || 
+      p.id_producto?.toString().includes(termino) ||
+      p.codigo_barra?.toLowerCase().includes(termino)
+    );
   });
 
   return (
@@ -70,7 +79,12 @@ export default function Inventario({ usuario }) {
             Exportar
           </button>
           
-          <button className="bg-[#263238] text-white px-5 py-3 rounded-2xl text-xs font-bold hover:bg-[#1a2327] transition-all flex items-center gap-2 shadow-lg shadow-black/10">
+          {/* BOTÓN DE ESCÁNER VINCULADO: Ahora abre la cámara al hacer clic */}
+          <button 
+            type="button"
+            onClick={() => setCamaraAbierta(true)}
+            className="bg-[#263238] text-white px-5 py-3 rounded-2xl text-xs font-bold hover:bg-[#1a2327] transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+          >
             <img src="/Iconos/escaner.png" className="w-4 h-4 brightness-0 invert" alt="Escáner" />
             Escáner Producto
           </button>
@@ -98,13 +112,11 @@ export default function Inventario({ usuario }) {
            </div>
 
            <div className="flex gap-3">
-              {/* Icono de filtrar.png */}
               <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all">
                 <img src="/Iconos/filtrar.png" className="w-4 h-4" alt="Filtrar" />
                 Seleccionar Fecha
               </button>
 
-              {/* Icono de stock.png */}
               <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all">
                 <img src="/Iconos/stock.png" className="w-4 h-4" alt="Stock" />
                 Stock Bajo
@@ -140,7 +152,10 @@ export default function Inventario({ usuario }) {
                     <td className="py-5 px-4 font-bold text-[#2DCDBA]">#{p.id_producto}</td>
                     <td className="py-5 px-4 flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-xl opacity-60">📦</div>
-                      <span className="font-bold text-[#263238]">{p.nombre}</span>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#263238]">{p.nombre}</span>
+                        {p.codigo_barra && <span className="text-[10px] text-gray-400 font-medium">EAN: {p.codigo_barra}</span>}
+                      </div>
                     </td>
                     <td className="py-5 px-4 text-gray-400 font-bold text-[11px]">3 SEMANAS</td>
                     <td className="py-5 px-4 font-black text-[#263238]">${p.precio_venta}</td>
@@ -154,11 +169,9 @@ export default function Inventario({ usuario }) {
                     </td>
                     <td className="py-5 px-4 text-right">
                       <div className="flex justify-end gap-1">
-                        {/* Icono editar.png */}
                         <button onClick={() => abrirModal(p)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
                           <img src="/Iconos/editar.png" className="w-5 h-5" alt="Editar" />
                         </button>
-                        {/* Icono borrar.png */}
                         <button onClick={() => eliminarProducto(p.id_producto)} className="p-2 hover:bg-red-50 rounded-xl transition-all">
                           <img src="/Iconos/borrar.png" className="w-5 h-5" alt="Borrar" />
                         </button>
@@ -172,12 +185,53 @@ export default function Inventario({ usuario }) {
         </div>
       </div>
       
-      {modalAbierto && (
-        <ModalProducto 
-          cerrar={() => setModalAbierto(false)} 
-          producto={productoParaEditar} 
-          idNegocio={usuario?.id_negocio}
-          recargar={cargarProductos}
+{/* MODAL ORIGINAL DEL PRODUCTO */}
+{/* EN INVENTARIO.JSX: El atributo key obliga a React a recrear el formulario completamente limpio con los nuevos datos */}
+{modalAbierto && (
+  <ModalProducto 
+    key={productoParaEditar?.id_producto || productoParaEditar?.codigo_barra || 'nuevo'}
+    cerrar={() => {
+      setModalAbierto(false);
+      setProductoParaEditar(null); // Limpia el estado para el siguiente escaneo
+    }} 
+    producto={productoParaEditar} 
+    idNegocio={usuario?.id_negocio}
+    recargar={cargarProductos}
+  />
+)}
+
+      {/* NUEVA INTEGRACIÓN INTELIGENTE: Valida existencia en DB antes de abrir formularios */}
+      {camaraAbierta && (
+        <ScannerCamara 
+          cerrar={() => setCamaraAbierta(false)} 
+          onScanSuccess={async (codigoDetectado) => {
+            if (!usuario?.id_negocio) return;
+            
+            try {
+              const res = await fetch(`http://127.0.0.1:5000/productos/buscar/${usuario.id_negocio}/${codigoDetectado}`);
+              
+              if (res.ok) {
+                const productoExistente = await res.json();
+                abrirModal(productoExistente); 
+              } else {
+  // Se manda un objeto limpio SIN id_producto, así 'esEdicion' dará falso de forma correcta
+  abrirModal({
+    nombre: '',
+    codigo_barra: codigoDetectado,
+    categoria: '',
+    precio_compra: 0,
+    precio_venta: 0,
+    stock: 0,
+    stock_minimo: 5
+  });
+}
+            } catch (error) {
+              console.error("Error al validar producto escaneado:", error);
+              alert("Error de conexión al validar el código");
+            } finally {
+              setCamaraAbierta(false); 
+            }
+          }} 
         />
       )}
     </div>

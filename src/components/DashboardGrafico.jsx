@@ -1,16 +1,31 @@
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const COLORES = ['#2DCDBA', '#FF7043', '#263238', '#FFC107', '#4f46e5', '#9C27B0'];
 
+// 1. GRÁFICO DE TORTA (Categorías)
 export function GraficoEstado({ usuario }) {
   const [datos, setDatos] = useState([]);
+
   useEffect(() => {
+    // Diagnóstico en consola para ver si hereda el id_negocio
+    console.log("-> GraficoEstado (Categorías) recibió usuario:", usuario);
+
     if (usuario?.id_negocio) {
       fetch(`http://127.0.0.1:5000/grafico-categorias/${usuario.id_negocio}`)
-        .then(res => res.json()).then(setDatos).catch(console.error);
+        .then(res => res.json())
+        .then(setDatos)
+        .catch(err => console.error("Error en gráfico categorías:", err));
     }
   }, [usuario]);
+
+  if (datos.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs italic">
+        Sin datos de categorías
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -25,14 +40,29 @@ export function GraficoEstado({ usuario }) {
   );
 }
 
+// 2. COMPONENTE PRINCIPAL: GRÁFICO DE BARRAS (Productos más vendidos)
 export default function DashboardGrafico({ usuario }) {
   const [datos, setDatos] = useState([]);
+
   useEffect(() => {
+    // Diagnóstico en consola para revisar el flujo
+    console.log("-> DashboardGrafico (Productos) recibió usuario:", usuario);
+
     if (usuario?.id_negocio) {
       fetch(`http://127.0.0.1:5000/grafico-productos/${usuario.id_negocio}`)
-        .then(res => res.json()).then(setDatos).catch(console.error);
+        .then(res => res.json())
+        .then(setDatos)
+        .catch(err => console.error("Error en gráfico productos:", err));
     }
   }, [usuario]);
+
+  if (datos.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs italic">
+        Sin datos de ventas disponibles
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -46,4 +76,3 @@ export default function DashboardGrafico({ usuario }) {
     </ResponsiveContainer>
   );
 }
-// (GraficoVentas se mantiene igual con datos demo por ahora)

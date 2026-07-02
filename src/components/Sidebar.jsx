@@ -1,11 +1,9 @@
-// 1. Agregamos onLogout aquí arriba
 export default function Sidebar({ alCambiarVista, vistaActiva, onLogout }) {
   const menuItems = [
     { id: 'inicio', label: 'Inicio', icon: '/Iconos/home.png' },
     { id: 'inventario', label: 'Inventario', icon: '/Iconos/box.png' },
     { id: 'ventas', label: 'Ventas', icon: '/Iconos/cart.png' },
-    { id: 'reportes', label: 'Reportes', icon: '/Iconos/chart.png' },
-  ];
+  ]; // Se eliminó por completo la pestaña de reportes
 
   return (
     <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen">
@@ -47,10 +45,10 @@ export default function Sidebar({ alCambiarVista, vistaActiva, onLogout }) {
         })}
       </nav>
 
-      {/* BOTÓN CERRAR SESIÓN CON onClick CONECTADO */}
+      {/* BOTÓN CERRAR SESIÓN */}
       <div className="p-6 border-t border-gray-50">
         <button 
-          onClick={onLogout} // 2. Conectamos la función aquí
+          onClick={onLogout}
           className="w-full flex items-center gap-4 px-6 py-3 text-[#263238]/40 font-bold hover:text-[#FF7043] group transition-all duration-300"
         >
           <img 

@@ -86,7 +86,6 @@ def registrar():
         return jsonify({"status": "error", "mensaje": str(e)}), 400
 
 # --- PRODUCTOS (CRUD) ---
-# ... Las rutas del producto se mantienen igual, dando asi una estructura mas limpia...
 
 @app.route('/productos/<int:id_negocio>', methods=['GET'])
 def obtener_productos(id_negocio):
@@ -242,10 +241,133 @@ def obtener_usuarios_negocio(id_negocio):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-
 @app.route('/test-api', methods=['GET'])
 def test_api():
     return {"status": "Conexion exitosa", "proyecto": "Invetiendas API"}, 200
+
+
+# ==========================================================
+# NUEVO: CONEXIONES INTEGRALES PARA EL ESCÁNER Y LAS VENTAS
+# ==========================================================
+
+@app.route('/productos/buscar/<int:id_negocio>/<string:codigo_barra>', methods=['GET'])
+def buscar_producto_codigo(id_negocio, codigo_barra):
+    """ Busca un producto usando el EAN escaneado para agregarlo a la canasta """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        query = """
+            SELECT id_producto, nombre, precio_venta, stock, stock_minimo, codigo_barra 
+            FROM producto 
+            WHERE id_negocio = %s AND codigo_barra = %s
+        """
+        cursor.execute(query, (id_negocio, codigo_barra))
+        producto = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if producto:
+            return jsonify(producto), 200
+        else:
+            return jsonify({"error": "Producto no registrado"}), 404
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/ventas/registrar', methods=['POST'])
+def registrar_venta_real():
+    """ Procesa los artículos escaneados, descuenta existencias e inserta en venta y detalle_venta """
+    datos = request.json
+    id_negocio = datos.get('id_negocio')
+    id_usuario = datos.get('id_usuario') 
+    items = datos.get('items', []) 
+
+    if not id_negocio or not items:
+        return jsonify({"error": "Datos de transacción insuficientes"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Si no viene un id_usuario definido, asociamos el primer usuario registrado en el negocio
+        if not id_usuario:
+            cursor.execute("SELECT id_usuario FROM usuario WHERE id_negocio = %s LIMIT 1", (id_negocio,))
+            usuario_db = cursor.fetchone()
+            id_usuario = usuario_db['id_usuario'] if usuario_db else None
+            if not id_usuario:
+                return jsonify({"error": "No se detectó un usuario válido para la transacción"}), 400
+
+        # 1. ETAPA DE CONTROL: Validamos stocks antes de escribir cambios en la DB
+        total_factura = 0
+        productos_validados = []
+
+        for item in items:
+            id_prod = item['id_producto']
+            cant_vender = item['cantidad']
+            
+            cursor.execute("SELECT nombre, stock, precio_venta FROM producto WHERE id_producto = %s AND id_negocio = %s", (id_prod, id_negocio))
+            prod_db = cursor.fetchone()
+            
+            if not prod_db:
+                cursor.close()
+                conn.close()
+                return jsonify({"error": f"El producto ID #{id_prod} no existe"}), 404
+                
+            if prod_db['stock'] < cant_vender:
+                cursor.close()
+                conn.close()
+                return jsonify({"error": f"Stock insuficiente para '{prod_db['nombre']}'. Disponibles: {prod_db['stock']}"}), 400
+
+            subtotal = prod_db['precio_venta'] * cant_vender
+            total_factura += subtotal
+            
+            productos_validados.append({
+                'id_producto': id_prod,
+                'cantidad': cant_vender,
+                'precio_unitario': prod_db['precio_venta'],
+                'subtotal': subtotal
+            })
+
+        # 2. ETAPA DE OPERACIÓN: Escritura relacional en cascada (InnoDB)
+        
+        # A. Crear cabecera en la tabla 'venta'
+        query_venta = "INSERT INTO venta (id_usuario, total) VALUES (%s, %s)"
+        cursor.execute(query_venta, (id_usuario, total_factura))
+        id_nueva_venta = cursor.lastrowid # Recuperamos el ID autogenerado de la factura
+
+        # B. Insertar cada artículo en 'detalle_venta' y descontar stock
+        for prod in productos_validados:
+            query_detalle = """
+                INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario, subtotal)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query_detalle, (
+                id_nueva_venta, prod['id_producto'], prod['cantidad'], 
+                prod['precio_unitario'], prod['subtotal']
+            ))
+            
+            # Descuento físico del inventario
+            query_update_stock = "UPDATE producto SET stock = stock - %s WHERE id_producto = %s"
+            cursor.execute(query_update_stock, (prod['cantidad'], prod['id_producto']))
+
+        # Guardamos definitivamente todos los cambios en MySQL
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "status": "success", 
+            "mensaje": f"Venta #{id_nueva_venta} procesada exitosamente. Total: ${total_factura}"
+        }), 200
+        
+    except Exception as e:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
